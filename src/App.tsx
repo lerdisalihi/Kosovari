@@ -12,6 +12,7 @@ import { Admin } from './pages/Admin'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import UserProfile from './pages/UserProfile'
+import ForgotPassword from './pages/ForgotPassword'
 
 // Add a new ProtectedRoute component
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -40,6 +41,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
+            <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="issues" element={<Issues />} />
             <Route path="report" element={<ReportProblem />} />
             <Route 

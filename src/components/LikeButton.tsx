@@ -104,62 +104,26 @@ const LikeButton: React.FC<LikeButtonProps> = ({ issueId, initialCount = 0, onUp
     setIsLoading(true); // Disable UI while processing
 
     try {
-      if (isLiked) {
-        // If already liked, remove the like
-        const { error } = await supabase
-          .from('perdoruesit_likes')
-          .delete()
-          .eq('issue_id', issueId)
-          .eq('perdorues_id', user.perdorues_id);
+      // Call the stored procedure (MCP) to toggle like
+      const { data, error } = await supabase.rpc('toggle_like', {
+        issue_id: issueId,
+        perdorues_id: user.perdorues_id
+      });
 
-        if (error) {
-          console.error('Error unliking:', error);
-          throw error;
-        }
-
-        setIsLiked(false);
-        setLikeCount(prev => prev - 1);
-        onUpdate?.(likeCount - 1);
-      } else {
-        // Add a like
-        const { error } = await supabase
-          .from('perdoruesit_likes')
-          .insert([{ 
-            issue_id: issueId, 
-            perdorues_id: user.perdorues_id 
-          }]);
-
-        if (error) {
-          console.error('Error liking:', error);
-          throw error;
-        }
-
-        setIsLiked(true);
-        setLikeCount(prev => prev + 1);
-        onUpdate?.(likeCount + 1);
+      if (error) {
+        console.error('Error toggling like via MCP:', error);
+        throw error;
       }
 
-      // Re-fetch the count from server for consistency
-      const { count, error: countError } = await supabase
-        .from('perdoruesit_likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('issue_id', issueId);
-
-      if (countError) {
-        console.error('Error fetching count:', countError);
-        throw countError;
+      // The function returns { like_count, liked }
+      if (data && data.length > 0) {
+        setLikeCount(data[0].like_count);
+        setIsLiked(data[0].liked);
+        onUpdate?.(data[0].like_count);
       }
-
-      const newCount = count || 0;
-      setLikeCount(newCount);
-      onUpdate?.(newCount);
     } catch (error) {
       console.error('Error toggling like:', error);
       toast.error('Failed to update like. Please try again.');
-      
-      // Revert state if something went wrong
-      setIsLiked(!isLiked);
-      setLikeCount(prev => isLiked ? prev + 1 : prev - 1);
     } finally {
       setIsLoading(false);
     }

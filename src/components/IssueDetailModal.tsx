@@ -35,7 +35,6 @@ const IssueDetailModal: React.FC<IssueDetailModalProps> = ({ isOpen, onClose, is
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [likeCount, setLikeCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const { user, updateUserXP } = useAuthStore();
@@ -143,7 +142,6 @@ const IssueDetailModal: React.FC<IssueDetailModalProps> = ({ isOpen, onClose, is
       setComments(commentsWithUsernames);
     } catch (error) {
       console.error('Error fetching comments:', error);
-      setError('Failed to load comments');
     }
   };
 
@@ -279,18 +277,12 @@ const IssueDetailModal: React.FC<IssueDetailModalProps> = ({ isOpen, onClose, is
         content: newComment.trim()
       });
 
-      // Now try to insert the comment
-      const { data: commentData, error: commentError } = await supabase
-        .from('perdoruesit_comments')
-        .insert([
-          {
-            issue_id: issueId,
-            perdorues_id: user.perdorues_id, // Using the integer ID directly
-            content: newComment.trim(),
-          },
-        ])
-        .select()
-        .single();
+      // Use the new stored procedure to insert the comment
+      const { data: commentData, error: commentError } = await supabase.rpc('add_comment', {
+        p_issue_id: issueId,
+        p_perdorues_id: user.perdorues_id,
+        p_content: newComment.trim(),
+      });
 
       if (commentError) {
         console.error('Comment insertion error:', {
@@ -351,7 +343,7 @@ const IssueDetailModal: React.FC<IssueDetailModalProps> = ({ isOpen, onClose, is
       setTimeout(() => setShowLevelUp({ show: false, level: 0, quote: '' }), 4000);
     });
     // Subscribe to XP change events (not level up)
-    const unsubscribeXP = subscribeToXPChange((xp, quote) => {
+    const unsubscribeXP = subscribeToXPChange((_, quote) => {
       setShowXPQuote({ show: true, quote });
       setTimeout(() => setShowXPQuote({ show: false, quote: '' }), 3000);
     });

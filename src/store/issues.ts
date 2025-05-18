@@ -72,25 +72,37 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
         imageUrl = uploadedUrl;
       }
 
-      const { data, error } = await supabase
-        .from('issues')
-        .insert([{
-          ...issue,
-          user_id: Number(user.perdorues_id), // Ensure it's a number
-          status: 'open',
-          image_url: imageUrl
-        }])
-        .select()
-        .single();
+      // Call the stored procedure instead of direct insert
+      const { data, error } = await supabase.rpc('insert_issue', {
+        p_category: issue.category,
+        p_description: issue.description,
+        p_latitude: issue.latitude,
+        p_longitude: issue.longitude,
+        p_user_id: Number(user.perdorues_id),
+        p_image_url: imageUrl || null
+      });
 
       if (error) throw error;
 
+      // Fetch the newly created issue by its ID
+      const { data: newIssue, error: fetchError } = await supabase
+        .from('issues')
+        .select('*, perdoruesit:user_id(perdorues_id, emri)')
+        .eq('id', data)
+        .single();
+      if (fetchError) throw fetchError;
+
+      const issueWithUsername = {
+        ...newIssue,
+        username: newIssue.perdoruesit?.emri || undefined,
+      };
+
       set((state) => ({
-        issues: [data, ...state.issues],
+        issues: [issueWithUsername, ...state.issues],
         loading: false
       }));
 
-      return data;
+      return issueWithUsername;
     } catch (error: any) {
       console.error('Error adding issue:', error);
       set({ error: error.message || 'Failed to add issue', loading: false });
