@@ -22,7 +22,7 @@ KosovAR is a web application designed to help users report and track community i
 - **Backend:** Supabase (PostgreSQL, Auth, Storage)
 - **Geolocation:** Custom controllers + OpenStreetMap or geocoding API
 - **State Management:** Zustand or Context API (depending on feature)
-- **AR Tools:** QR Code generation + camera-triggered behavior
+- **AR Tools:** QR Code generation + camera-triggered behavior + Adobe Aero + Maximo
 
 ---
 
