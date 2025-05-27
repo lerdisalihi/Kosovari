@@ -1,5 +1,5 @@
 # KosovAR
-
+Go to the url "https://kosovar.netlify.app/"
 KosovAR is a web application designed to help users report and track community issues using an interactive map interface and Augmented Reality (AR) features. It encourages civic engagement by making issue reporting intuitive, visual, and gamified.
 
 ---
